@@ -1,0 +1,154 @@
+﻿{
+    "success":  true,
+    "message":  "Optimization completed successfully",
+    "data":  {
+                 "query":  {
+                               "crop":  "onion",
+                               "quantity":  100,
+                               "vehicleType":  "truck",
+                               "sourceLocation":  {
+                                                      "lat":  22.5,
+                                                      "lng":  88.3
+                                                  }
+                           },
+                 "optimization":  {
+                                      "bestMandi":  {
+                                                        "name":  "Howrah Mandi",
+                                                        "netProfit":  125633,
+                                                        "distance":  14.7,
+                                                        "price":  1350,
+                                                        "profitPerQuintal":  1256,
+                                                        "profitPercentage":  93.1,
+                                                        "volatilityAlert":  false,
+                                                        "historicalTrend":  "Mandi usually peaks on Saturdays"
+                                                    },
+                                      "localMandi":  {
+                                                         "name":  "Kolkata Mandi",
+                                                         "netProfit":  110662,
+                                                         "distance":  13.5,
+                                                         "price":  1200
+                                                     },
+                                      "extraProfit":  14971,
+                                      "recommendation":  "Travel to Howrah Mandi! You\u0027ll earn ₹14971 more than your local market at Kolkata Mandi.",
+                                      "worthExtraDistance":  {
+                                                                 "worth":  true,
+                                                                 "profitPerExtraKm":  12476,
+                                                                 "extraDistance":  1.2,
+                                                                 "extraProfit":  14971,
+                                                                 "reason":  "Gain of ₹12476/km justifies extra distance"
+                                                             },
+                                      "perishability":  {
+                                                            "bestMandi":  {
+                                                                              "spoilagePercentage":  0,
+                                                                              "spoilageAmount":  0,
+                                                                              "adjustedProfit":  125633,
+                                                                              "isSafe":  true,
+                                                                              "riskLevel":  "low",
+                                                                              "warning":  {
+                                                                                              "hasWarning":  false,
+                                                                                              "severity":  "none",
+                                                                                              "icon":  "✅",
+                                                                                              "message":  "Onion is safe to transport at 14.7km",
+                                                                                              "recommendation":  "No special precautions needed."
+                                                                                          },
+                                                                              "originalProfit":  125633
+                                                                          },
+                                                            "localMandi":  {
+                                                                               "spoilagePercentage":  0,
+                                                                               "spoilageAmount":  0,
+                                                                               "adjustedProfit":  110662,
+                                                                               "isSafe":  true,
+                                                                               "riskLevel":  "low",
+                                                                               "warning":  {
+                                                                                               "hasWarning":  false,
+                                                                                               "severity":  "none",
+                                                                                               "icon":  "✅",
+                                                                                               "message":  "Onion is safe to transport at 13.5km",
+                                                                                               "recommendation":  "No special precautions needed."
+                                                                                           },
+                                                                               "originalProfit":  110662
+                                                                           },
+                                                            "shouldConsiderLocal":  false
+                                                        }
+                                  },
+                 "results":  [
+                                 {
+                                     "mandi":  "Howrah Mandi",
+                                     "distance":  14.7,
+                                     "price":  1350,
+                                     "revenue":  135000,
+                                     "transportCost":  367,
+                                     "handlingCost":  9000,
+                                     "totalCost":  9367,
+                                     "netProfit":  125633,
+                                     "profitPerQuintal":  1256,
+                                     "profitPercentage":  93.1,
+                                     "volatilityAlert":  false,
+                                     "historicalTrend":  "Mandi usually peaks on Saturdays"
+                                 },
+                                 {
+                                     "mandi":  "District Main Mandi",
+                                     "distance":  55,
+                                     "price":  1320,
+                                     "revenue":  132000,
+                                     "transportCost":  1376,
+                                     "handlingCost":  9000,
+                                     "totalCost":  10376,
+                                     "netProfit":  121624,
+                                     "profitPerQuintal":  1216,
+                                     "profitPercentage":  92.1,
+                                     "volatilityAlert":  true,
+                                     "historicalTrend":  "Mandi usually peaks on Fridays"
+                                 },
+                                 {
+                                     "mandi":  "Local Market (Nearby)",
+                                     "distance":  16.1,
+                                     "price":  1250,
+                                     "revenue":  125000,
+                                     "transportCost":  401,
+                                     "handlingCost":  9000,
+                                     "totalCost":  9401,
+                                     "netProfit":  115599,
+                                     "profitPerQuintal":  1156,
+                                     "profitPercentage":  92.5,
+                                     "volatilityAlert":  false,
+                                     "historicalTrend":  "Mandi usually peaks on Saturdays"
+                                 },
+                                 {
+                                     "mandi":  "Kolkata Mandi",
+                                     "distance":  13.5,
+                                     "price":  1200,
+                                     "revenue":  120000,
+                                     "transportCost":  338,
+                                     "handlingCost":  9000,
+                                     "totalCost":  9338,
+                                     "netProfit":  110662,
+                                     "profitPerQuintal":  1107,
+                                     "profitPercentage":  92.2,
+                                     "volatilityAlert":  false,
+                                     "historicalTrend":  "Mandi usually peaks on Fridays"
+                                 },
+                                 {
+                                     "mandi":  "Barasat Mandi",
+                                     "distance":  40.2,
+                                     "price":  1100,
+                                     "revenue":  110000,
+                                     "transportCost":  1005,
+                                     "handlingCost":  9000,
+                                     "totalCost":  10005,
+                                     "netProfit":  99995,
+                                     "profitPerQuintal":  1000,
+                                     "profitPercentage":  90.9,
+                                     "volatilityAlert":  true,
+                                     "historicalTrend":  "Mandi usually peaks on Wednesdays"
+                                 }
+                             ],
+                 "metadata":  {
+                                  "totalMandisAnalyzed":  5,
+                                  "maxDistanceKm":  100,
+                                  "vehicleRate":  25,
+                                  "customVehicle":  null,
+                                  "timestamp":  "2026-02-09T10:44:00.325Z"
+                              }
+             }
+}
