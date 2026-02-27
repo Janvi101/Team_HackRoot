@@ -6,6 +6,7 @@ import MapView from './components/MapView';
 import ProfitChart from './components/ProfitChart';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { optimizeTrip } from './services/api';
+import { getLatestFuelPrice } from './services/fuelApi';
 import './App.css';
 
 function App() {
@@ -14,6 +15,17 @@ function App() {
     const [results, setResults] = useState(null);
     const [error, setError] = useState(null);
     const [queryData, setQueryData] = useState(null);
+    const [fuelPrice, setFuelPrice] = useState(null);
+
+    React.useEffect(() => {
+        const fetchFuelPrice = async () => {
+            const data = await getLatestFuelPrice();
+            if (data.price) {
+                setFuelPrice(data.price);
+            }
+        };
+        fetchFuelPrice();
+    }, []);
 
     const handleOptimize = async (formData) => {
         setLoading(true);
@@ -45,7 +57,25 @@ function App() {
 
     return (
         <div className="app">
-            <LanguageSwitcher />
+            <nav className="navbar">
+                <div className="container navbar-container">
+                    <div className="navbar-logo">
+                        <span className="logo-icon">🌾</span>
+                        <span className="logo-text">{t('appTitle')}</span>
+                    </div>
+                    <div className="navbar-right">
+                        {fuelPrice && (
+                            <div className="fuel-rate-badge">
+                                <span className="fuel-icon">⛽</span>
+                                <span className="fuel-label">{t('fuel.liveDiesel')}: </span>
+                                <span className="fuel-value">₹{fuelPrice}/L</span>
+                            </div>
+                        )}
+                        <LanguageSwitcher />
+                    </div>
+                </div>
+            </nav>
+
             {/* Hero Section */}
             <div className="hero-section">
                 <div className="hero-bg"></div>
@@ -54,7 +84,11 @@ function App() {
                         <h1>{t('hero.title')}</h1>
                         <p>{t('hero.subtitle')}</p>
                     </div>
-                    <InputForm onSubmit={handleOptimize} loading={loading} />
+                    <InputForm
+                        onSubmit={handleOptimize}
+                        loading={loading}
+                        initialIsRideShare={queryData?.isRideShare || false}
+                    />
 
                     {error && (
                         <div className="error-message">
@@ -64,6 +98,9 @@ function App() {
                             </div>
                         </div>
                     )}
+                    <p className="ride-share-tagline">
+                        {t('rideShare.opportunitiesSubtitle')}
+                    </p>
                 </div>
             </div>
 
@@ -71,7 +108,13 @@ function App() {
             {results && (
                 <div id="results-section" className="results-section">
                     <div className="container">
-                        <ResultsDisplay data={results} />
+                        <ResultsDisplay
+                            data={results}
+                            onSwitchToRideShare={() => {
+                                const updatedData = { ...queryData, isRideShare: true };
+                                handleOptimize(updatedData);
+                            }}
+                        />
 
                         <ProfitChart
                             results={results.results}
@@ -82,6 +125,7 @@ function App() {
                             sourceLocation={queryData.source}
                             results={results.results}
                             bestMandiName={results.optimization.bestMandi.name}
+                            poolOpportunities={results.optimization.poolOpportunities}
                         />
                     </div>
                 </div>

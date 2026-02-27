@@ -3,9 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const optimizeRoutes = require('./routes/optimize.routes');
+const fuelRoutes = require('./routes/fuel.routes');
 
 /**
- * Krishi-Route Backend Server
+ * Krishi Route Backend Server
  * Main application entry point
  */
 
@@ -27,11 +28,22 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api', optimizeRoutes);
+app.use('/api/fuel', fuelRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'UP',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
 
 // Root route
 app.get('/', (req, res) => {
     res.json({
-        message: 'Welcome to Krishi-Route API',
+        message: 'Welcome to Krishi Route API',
         description: 'Profit & Logistics Optimizer for Farmers',
         version: '1.0.0',
         endpoints: {
@@ -39,6 +51,7 @@ app.get('/', (req, res) => {
             optimize: 'POST /api/optimize',
             crops: '/api/crops',
             vehicles: '/api/vehicles',
+            fuel: '/api/fuel/price'
         },
         documentation: 'https://github.com/yourusername/krishi-route',
     });
@@ -81,6 +94,7 @@ app.listen(PORT, () => {
     console.log(`   POST http://localhost:${PORT}/api/optimize`);
     console.log(`   GET  http://localhost:${PORT}/api/crops`);
     console.log(`   GET  http://localhost:${PORT}/api/vehicles`);
+    console.log(`   GET  http://localhost:${PORT}/api/fuel/price`);
     console.log('\n' + '='.repeat(60) + '\n');
 });
 

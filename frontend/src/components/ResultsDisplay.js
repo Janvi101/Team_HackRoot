@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import './ResultsDisplay.css';
 
-const ResultsDisplay = ({ data }) => {
+const ResultsDisplay = ({ data, onSwitchToRideShare }) => {
     const { t } = useTranslation();
 
     if (!data || !data.optimization) return null;
@@ -12,7 +12,18 @@ const ResultsDisplay = ({ data }) => {
 
     // Sort by distance and take only top 5 nearest
     const sortedByDistance = [...results].sort((a, b) => a.distance - b.distance);
-    const nearestMandis = sortedByDistance.slice(0, 5);
+    let nearestMandis = sortedByDistance.slice(0, 5);
+
+    // Ensure bestMandi is always in the list even if it's far away
+    const bestMandiInList = nearestMandis.some(m => m.mandi === bestMandi.name);
+    if (!bestMandiInList) {
+        const bestMandiDetails = results.find(m => m.mandi === bestMandi.name);
+        if (bestMandiDetails) {
+            // Add to the end if not present
+            nearestMandis = [...nearestMandis, bestMandiDetails];
+        }
+    }
+
     const totalMandis = results.length;
 
     return (
@@ -20,7 +31,10 @@ const ResultsDisplay = ({ data }) => {
             <div className="results-header">
                 <h2>🎯 {t('results.title')}</h2>
                 <p className="results-subtitle">
-                    {t('results.subtitle', { total: totalMandis, distance: metadata.maxDistanceKm })}
+                    {t('results.subtitle', {
+                        total: totalMandis || 0,
+                        distance: metadata?.maxDistanceKm || 100
+                    })}
                 </p>
             </div>
 
@@ -28,37 +42,63 @@ const ResultsDisplay = ({ data }) => {
             {perishability?.bestMandi?.warning?.hasWarning && (
                 <div className={`perishability-alert perishability-${perishability.bestMandi.warning.severity}`}>
                     <div className="alert-header">
-                        <span className="alert-icon">{perishability.bestMandi.warning.icon}</span>
+                        <span className="alert-icon">{perishability.bestMandi.warning.icon === 'HIGH' ? '🔴' : perishability.bestMandi.warning.icon === 'MED' ? '🟠' : '🟡'}</span>
                         <span className="alert-title">{t('results.perishability.warning')}</span>
                     </div>
                     <p className="alert-message">{perishability.bestMandi.warning.message}</p>
                     <p className="alert-recommendation">{perishability.bestMandi.warning.recommendation}</p>
 
-                    {perishability.bestMandi.spoilagePercentage > 0 && (
-                        <div className="spoilage-details">
-                            <div className="spoilage-stat">
-                                <span className="spoilage-label">{t('results.perishability.spoilage')}:</span>
-                                <span className="spoilage-value">{perishability.bestMandi.spoilagePercentage}%</span>
-                            </div>
-                            <div className="spoilage-stat">
-                                <span className="spoilage-label">{t('results.perishability.potentialLoss')}:</span>
-                                <span className="spoilage-value">₹{perishability.bestMandi.spoilageAmount?.toLocaleString()}</span>
-                            </div>
-                            {perishability.bestMandi.adjustedProfit !== undefined && (
-                                <div className="spoilage-stat">
-                                    <span className="spoilage-label">{t('results.perishability.adjustedProfit')}:</span>
-                                    <span className="spoilage-value adjusted">₹{perishability.bestMandi.adjustedProfit.toLocaleString()}</span>
-                                </div>
-                            )}
+                    <div className="spoilage-details">
+                        <div className="spoilage-stat">
+                            <span className="spoilage-label">{t('results.perishability.spoilage')}</span>
+                            <span className="spoilage-value">{perishability.bestMandi.spoilagePercentage}%</span>
                         </div>
-                    )}
+                        <div className="spoilage-stat">
+                            <span className="spoilage-label">{t('results.perishability.potentialLoss')}</span>
+                            <span className="spoilage-value">₹{perishability.bestMandi.spoilageAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="spoilage-stat">
+                            <span className="spoilage-label">{t('results.perishability.adjustedProfit')}</span>
+                            <span className="spoilage-value adjusted">₹{perishability.bestMandi.adjustedProfit.toLocaleString()}</span>
+                        </div>
+                    </div>
 
-                    {perishability.shouldConsiderLocal && perishability.localMandi && (
+                    {perishability.shouldConsiderLocal && (
                         <div className="local-alternative">
-                            <strong>💡 {t('results.perishability.localAlternative')}:</strong> {t('mandis.' + localMandi.name, localMandi.name)} at {localMandi.distance}km
-                            has {perishability.localMandi.warning.severity} spoilage risk
+                            <strong>💡 {t('results.perishability.localAlternative')}:</strong> {t('results.recommendation.stickToLocal', { localMandi: t('mandis.' + localMandi.name, localMandi.name) })}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Advanced Ride-Sharing: Pool Opportunity List */}
+            {optimization?.poolOpportunities?.length > 0 && (
+                <div className="pool-opportunities-container">
+                    <div className="pool-header">
+                        <div className="pool-header-main">
+                            <span className="sparkle">✨</span>
+                            <h3>{t('rideShare.opportunitiesTitle', 'Nearby Pool Opportunities')}</h3>
+                        </div>
+                        <p className="pool-tagline">{t('rideShare.opportunitiesSubtitle', 'Share space, save fuel costs!')}</p>
+                    </div>
+                    <div className="pool-list">
+                        {optimization.poolOpportunities.map((partner) => (
+                            <div key={partner.id} className="pool-partner-card">
+                                <div className="partner-info">
+                                    <span className="partner-name">{partner.farmerName}</span>
+                                    <span className="partner-meta">
+                                        {partner.distanceFromUser} km away • {partner.quantity} Q of {partner.crop}
+                                    </span>
+                                </div>
+                                <div className="partner-action" onClick={onSwitchToRideShare}>
+                                    <span className="savings-est">
+                                        Split Cost ({Math.round((metadata.quantity / (metadata.quantity + partner.quantity)) * 100)}%)
+                                    </span>
+                                    <button className="join-pool-btn">{t('rideShare.joinPool', 'Join Pool')}</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -71,7 +111,7 @@ const ResultsDisplay = ({ data }) => {
                 <h3 className="winner-name">{t('mandis.' + bestMandi.name, bestMandi.name)}</h3>
                 <div className="winner-stats">
                     <div className="stat-item">
-                        <div className="stat-value">₹{bestMandi.netProfit.toLocaleString()}</div>
+                        <div className="stat-value">₹{(bestMandi?.netProfit || 0).toLocaleString()}</div>
                         <div className="stat-label">{t('results.winner.netProfit')}</div>
                     </div>
                     <div className="stat-divider"></div>
@@ -89,7 +129,25 @@ const ResultsDisplay = ({ data }) => {
                 {extraProfit > 0 && localMandi && (
                     <div className="extra-profit-badge">
                         <span className="badge-icon">💰</span>
-                        {t('results.winner.extraProfit', { amount: extraProfit.toLocaleString(), localMandiName: t('mandis.' + localMandi.name, localMandi.name) })}
+                        {t('results.winner.extraProfit', {
+                            amount: (extraProfit || 0).toLocaleString(),
+                            localMandiName: t('mandis.' + localMandi.name, localMandi.name)
+                        })}
+                    </div>
+                )}
+
+                {bestMandi.breakdown?.isRideShare && (
+                    <div className="ride-share-savings-badge">
+                        <div className="badge-main">
+                            <span className="badge-icon">🚀</span>
+                            {t('rideShare.active')}
+                        </div>
+                        {bestMandi.breakdown.costShareInfo && (
+                            <div className="badge-details">
+                                Shared with <strong>{bestMandi.breakdown.costShareInfo.partnerName}</strong> •
+                                You pay <strong>{bestMandi.breakdown.costShareInfo.userRatio}%</strong> of transport
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -110,13 +168,13 @@ const ResultsDisplay = ({ data }) => {
                         if (extraProfit > 500) {
                             return t('results.recommendation.travelForProfit', {
                                 bestMandi: t('mandis.' + bestMandi.name, bestMandi.name),
-                                amount: Math.round(extraProfit).toLocaleString(),
+                                amount: Math.round(extraProfit || 0).toLocaleString(),
                                 localMandi: t('mandis.' + localMandi.name, localMandi.name)
                             });
                         } else if (extraProfit > 0) {
                             return t('results.recommendation.slightProfit', {
                                 bestMandi: t('mandis.' + bestMandi.name, bestMandi.name),
-                                amount: Math.round(extraProfit).toLocaleString(),
+                                amount: Math.round(extraProfit || 0).toLocaleString(),
                                 localMandi: t('mandis.' + localMandi.name, localMandi.name)
                             });
                         } else {
@@ -144,7 +202,7 @@ const ResultsDisplay = ({ data }) => {
             <div className="all-results-section">
                 <h3 className="section-title">
                     📍 {t('results.nearestList.title')}
-                    <span className="mandi-count">{t('results.nearestList.sortedBy')}</span>
+                    <span className="mandi-count">{t('results.nearestList.sortedBy', { count: nearestMandis.length })}</span>
                 </h3>
                 <div className="results-grid">
                     {nearestMandis.map((result, index) => (
@@ -187,26 +245,26 @@ const ResultsDisplay = ({ data }) => {
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">{t('results.nearestList.revenue')}:</span>
-                                    <span className="detail-value green">₹{result.revenue.toLocaleString()}</span>
+                                    <span className="detail-value green">₹{(result.revenue || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">{t('results.nearestList.transportCost')}:</span>
-                                    <span className="detail-value red">₹{result.transportCost.toLocaleString()}</span>
+                                    <span className="detail-value red">₹{(result.transportCost || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="detail-row">
                                     <span className="detail-label">{t('results.nearestList.handlingCost')}:</span>
-                                    <span className="detail-value red">₹{result.handlingCost.toLocaleString()}</span>
+                                    <span className="detail-value red">₹{(result.handlingCost || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="detail-row total">
                                     <span className="detail-label">{t('results.nearestList.totalCost')}:</span>
-                                    <span className="detail-value red">₹{result.totalCost.toLocaleString()}</span>
+                                    <span className="detail-value red">₹{(result.totalCost || 0).toLocaleString()}</span>
                                 </div>
                             </div>
 
                             <div className="result-profit">
-                                <div className="profit-amount">₹{result.netProfit.toLocaleString()}</div>
+                                <div className="profit-amount">₹{(result.netProfit || 0).toLocaleString()}</div>
                                 <div className="profit-label">{t('results.winner.netProfit')}</div>
-                                <div className="profit-percentage">{result.profitPercentage}% {t('results.nearestList.margin')}</div>
+                                <div className="profit-percentage">{result.profitPercentage || 0}% {t('results.nearestList.margin')}</div>
                             </div>
                         </div>
                     ))}

@@ -4,13 +4,24 @@
  * Calculates net profit considering revenue, transport, and handling costs
  */
 
-// Vehicle rates per kilometer (in ₹)
-const VEHICLE_RATES = {
+const fuelService = require('./fuel.service');
+
+// Base vehicle rates per kilometer (in ₹) - based on fuel price of ₹90/L
+const BASE_VEHICLE_RATES = {
     tractor: 12,
     'tata-ace': 18,
     truck: 25,
     'mini-truck': 20,
     tempo: 15,
+};
+
+// Fuel sensitivity factor (roughly how much fuel the vehicle consumes per km)
+const FUEL_SENSITIVITY = {
+    tractor: 0.1,    // 10 km/L
+    'tata-ace': 0.15, // 6.6 km/L
+    truck: 0.25,      // 4 km/L
+    'mini-truck': 0.2, // 5 km/L
+    tempo: 0.12,     // 8 km/L
 };
 
 // Handling charges (in ₹ per quintal)
@@ -21,15 +32,32 @@ const HANDLING_CHARGES = {
 };
 
 /**
+ * Calculate dynamic vehicle rate based on fuel prices
+ */
+function getDynamicVehicleRate(vehicleType, fuelPrice = 90.5) {
+    const type = vehicleType.toLowerCase();
+    const baseRate = BASE_VEHICLE_RATES[type] || BASE_VEHICLE_RATES.truck;
+    const sensitivity = FUEL_SENSITIVITY[type] || FUEL_SENSITIVITY.truck;
+
+    // Adjustment based on deviation from reference fuel price (₹90)
+    const deviation = fuelPrice - 90;
+    const rateAdjustment = deviation * sensitivity;
+
+    return Math.round((baseRate + rateAdjustment) * 100) / 100;
+}
+
+/**
  * Calculate profit for a single mandi option
  * @param {object} mandi - Mandi details with price and location
  * @param {number} distance - Distance in kilometers
  * @param {number} quantity - Crop quantity in quintals
  * @param {string} vehicleType - Type of vehicle
- * @param {number} customVehicleRate - Optional custom vehicle rate per km (overrides standard rates)
+ * @param {object} options - Optional calculation parameters
  * @returns {object} Profit breakdown
  */
-function calculateProfit(mandi, distance, quantity, vehicleType, customVehicleRate = null) {
+function calculateProfit(mandi, distance, quantity, vehicleType, options = {}) {
+    const { customVehicleRate = null, isRideShare = false, fuelPrice = 90.5 } = options;
+
     // 1. Calculate Revenue
     const pricePerQuintal = mandi.price || mandi.pricePerQuintal;
     const revenue = pricePerQuintal * quantity;
@@ -37,8 +65,36 @@ function calculateProfit(mandi, distance, quantity, vehicleType, customVehicleRa
     // 2. Calculate Transport Cost
     const vehicleRate = customVehicleRate !== null
         ? customVehicleRate
-        : (VEHICLE_RATES[vehicleType.toLowerCase()] || VEHICLE_RATES.truck);
-    const transportCost = distance * vehicleRate;
+        : getDynamicVehicleRate(vehicleType, fuelPrice);
+
+    let transportCost = distance * vehicleRate;
+
+    // Apply advanced ride-share logic
+    let costShareInfo = null;
+    if (isRideShare) {
+        if (options.poolPartner) {
+            const { quantity: partnerQty, farmerName } = options.poolPartner;
+            const totalQty = quantity + partnerQty;
+
+            // Proportional split: User pays (UserQty / TotalQty) of the cost
+            // We apply an additional 15% "pooling efficiency" bonus
+            const baseRatio = quantity / totalQty;
+            const sharedRatio = Math.max(0.3, Math.min(0.7, baseRatio * 0.85));
+
+            const originalCost = transportCost;
+            transportCost = transportCost * sharedRatio;
+
+            costShareInfo = {
+                partnerName: farmerName,
+                partnerQuantity: partnerQty,
+                userRatio: Math.round(sharedRatio * 100),
+                savings: Math.round(originalCost - transportCost)
+            };
+        } else {
+            // Fallback to legacy 40% discount if no specific partner data
+            transportCost = transportCost * 0.6;
+        }
+    }
 
     // 3. Calculate Handling Costs
     const loadingCost = HANDLING_CHARGES.loading * quantity;
@@ -74,7 +130,11 @@ function calculateProfit(mandi, distance, quantity, vehicleType, customVehicleRa
             loading: loadingCost,
             unloading: unloadingCost,
             commission: commissionCost,
-            transport: transportCost,
+            transport: Math.round(transportCost),
+            isRideShare,
+            costShareInfo,
+            vehicleRate,
+            fuelPrice
         },
         priceHistory: mandi.priceHistory || [],
         historicalTrend: mandi.historicalTrend || null,
@@ -86,17 +146,17 @@ function calculateProfit(mandi, distance, quantity, vehicleType, customVehicleRa
  * @param {Array} mandiDistances - Array of {destination, distance} objects
  * @param {number} quantity - Crop quantity in quintals
  * @param {string} vehicleType - Type of vehicle
- * @param {number} customVehicleRate - Optional custom vehicle rate per km
+ * @param {object} options - Optional calculation parameters
  * @returns {Array} Array of profit calculations
  */
-function calculateMultipleProfits(mandiDistances, quantity, vehicleType, customVehicleRate = null) {
+function calculateMultipleProfits(mandiDistances, quantity, vehicleType, options = {}) {
     return mandiDistances.map(item => {
         return calculateProfit(
             item.destination,
             item.distance,
             quantity,
             vehicleType,
-            customVehicleRate
+            options
         );
     });
 }
@@ -104,29 +164,28 @@ function calculateMultipleProfits(mandiDistances, quantity, vehicleType, customV
 /**
  * Get vehicle rate per kilometer
  */
-function getVehicleRate(vehicleType) {
-    return VEHICLE_RATES[vehicleType.toLowerCase()] || VEHICLE_RATES.truck;
+function getVehicleRate(vehicleType, fuelPrice = 90.5) {
+    return getDynamicVehicleRate(vehicleType, fuelPrice);
 }
 
 /**
  * Get all available vehicle types with rates
  */
-function getAvailableVehicles() {
-    return Object.entries(VEHICLE_RATES).map(([type, rate]) => ({
+function getAvailableVehicles(fuelPrice = 90.5) {
+    return Object.entries(BASE_VEHICLE_RATES).map(([type, rate]) => ({
         type,
-        ratePerKm: rate,
+        ratePerKm: getDynamicVehicleRate(type, fuelPrice),
         displayName: type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
     }));
 }
 
 /**
  * Calculate break-even distance
- * Distance at which a higher-priced mandi becomes profitable over local mandi
  */
-function calculateBreakEvenDistance(localPrice, distantPrice, vehicleType, quantity) {
+function calculateBreakEvenDistance(localPrice, distantPrice, vehicleType, quantity, fuelPrice = 90.5) {
     const priceDifference = distantPrice - localPrice;
     const revenueGain = priceDifference * quantity;
-    const vehicleRate = getVehicleRate(vehicleType);
+    const vehicleRate = getVehicleRate(vehicleType, fuelPrice);
 
     // Break-even when: revenueGain = distanceCost
     const breakEvenDistance = revenueGain / vehicleRate;
@@ -140,6 +199,6 @@ module.exports = {
     getVehicleRate,
     getAvailableVehicles,
     calculateBreakEvenDistance,
-    VEHICLE_RATES,
+    VEHICLE_RATES: BASE_VEHICLE_RATES, // Keep for backward compatibility
     HANDLING_CHARGES,
 };

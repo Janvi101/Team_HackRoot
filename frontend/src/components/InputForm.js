@@ -3,17 +3,24 @@ import { useTranslation } from 'react-i18next';
 import LocationSearch from './LocationSearch';
 import './InputForm.css';
 
-const InputForm = ({ onSubmit, loading }) => {
-    const { t } = useTranslation();
+const InputForm = ({ onSubmit, loading, initialIsRideShare = false }) => {
+    const { t, i18n } = useTranslation();
     const [formData, setFormData] = useState({
         crop: 'onion',
         quantity: 20,
+        unit: 'quintal',
         vehicleType: 'truck',
+        isRideShare: initialIsRideShare,
         source: {
             lat: 22.5726,
             lng: 88.3639,
         },
     });
+
+    // Sync isRideShare if changed externally
+    React.useEffect(() => {
+        setFormData(prev => ({ ...prev, isRideShare: initialIsRideShare }));
+    }, [initialIsRideShare]);
 
     const [gettingLocation, setGettingLocation] = useState(false);
     const [locationError, setLocationError] = useState('');
@@ -35,6 +42,12 @@ const InputForm = ({ onSubmit, loading }) => {
         { value: 'other', label: t('crops.other') },
     ];
 
+    const quantityUnits = [
+        { value: 'kg', label: t('units.kg') },
+        { value: 'quintal', label: t('units.quintal') },
+        { value: 'ton', label: t('units.ton') },
+    ];
+
     const vehicles = [
         { value: 'tractor', label: `${t('vehicles.tractor')} (₹12/km)`, icon: '🚜' },
         { value: 'tata-ace', label: `${t('vehicles.tataAce')} (₹18/km)`, icon: '🚐' },
@@ -44,7 +57,7 @@ const InputForm = ({ onSubmit, loading }) => {
     ];
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
 
         if (name === 'lat' || name === 'lng') {
             setFormData({
@@ -58,6 +71,11 @@ const InputForm = ({ onSubmit, loading }) => {
             setFormData({
                 ...formData,
                 [name]: parseFloat(value),
+            });
+        } else if (type === 'checkbox') {
+            setFormData({
+                ...formData,
+                [name]: checked,
             });
         } else {
             setFormData({
@@ -139,9 +157,18 @@ const InputForm = ({ onSubmit, loading }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Convert quantity to quintals for backend
+        let quantityInQuintals = formData.quantity;
+        if (formData.unit === 'kg') {
+            quantityInQuintals = formData.quantity / 100;
+        } else if (formData.unit === 'ton') {
+            quantityInQuintals = formData.quantity * 10;
+        }
+
         // Use custom crop name if "other" is selected
         const finalFormData = {
             ...formData,
+            quantity: quantityInQuintals,
             crop: formData.crop === 'other' ? customCrop.toLowerCase().trim() : formData.crop,
         };
 
@@ -163,7 +190,7 @@ const InputForm = ({ onSubmit, loading }) => {
                     {t('appTitle')}
                     <span className="title-icon">🌾</span>
                 </h1>
-                <p className="form-subtitle">{t('form.headerSubtitlePart1')} <span className="highlight">{t('form.headerSubtitlePart2')}</span></p>
+                <p className="form-subtitle">{t('form.headerSubtitlePart1')} <span className="hero-highlight">{t('form.headerSubtitlePart2')}</span></p>
             </div>
 
             <form onSubmit={handleSubmit} className="optimization-form">
@@ -202,18 +229,32 @@ const InputForm = ({ onSubmit, loading }) => {
                         <label htmlFor="quantity">
                             {t('form.quantityQuintals')}
                         </label>
-                        <input
-                            type="number"
-                            id="quantity"
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleChange}
-                            className="form-control"
-                            min="0.1"
-                            max="1000"
-                            step="0.1"
-                            required
-                        />
+                        <div className="quantity-input-group">
+                            <input
+                                type="number"
+                                id="quantity"
+                                name="quantity"
+                                value={formData.quantity}
+                                onChange={handleChange}
+                                className="form-control"
+                                min="0.1"
+                                max="10000"
+                                step="0.1"
+                                required
+                            />
+                            <select
+                                name="unit"
+                                value={formData.unit}
+                                onChange={handleChange}
+                                className="form-control unit-select"
+                            >
+                                {quantityUnits.map(unit => (
+                                    <option key={unit.value} value={unit.value}>
+                                        {unit.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="form-group full-width">
@@ -229,6 +270,31 @@ const InputForm = ({ onSubmit, loading }) => {
                                     <span className="vehicle-label">{vehicle.label}</span>
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="ride-share-card">
+                            <div className="ride-share-header">
+                                <span className="ride-share-icon">👥</span>
+                                <div className="ride-share-titles">
+                                    <h4 className="ride-share-main-label">{t('rideShare.label')}</h4>
+                                    <p className="ride-share-tagline">
+                                        {t('rideShare.opportunitiesSubtitle')}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <label className="checkbox-container">
+                                <input
+                                    type="checkbox"
+                                    name="isRideShare"
+                                    checked={formData.isRideShare}
+                                    onChange={handleChange}
+                                />
+                                <span className="checkmark"></span>
+                                <div className="ride-share-info">
+                                    <span className="ride-share-desc">{t('rideShare.description')}</span>
+                                </div>
+                            </label>
                         </div>
 
                         <div className="custom-vehicle-toggle">

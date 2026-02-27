@@ -2,6 +2,8 @@ const agmarknetService = require('../services/agmarknet.service');
 const distanceService = require('../services/distance.service');
 const profitService = require('../services/profit.service');
 const decisionService = require('../services/decision.service');
+const fuelService = require('../services/fuel.service');
+const poolingService = require('../services/pooling.service');
 
 /**
  * Optimize Controller
@@ -15,12 +17,23 @@ const decisionService = require('../services/decision.service');
  */
 async function optimizeTrip(req, res) {
     try {
-        const { crop, quantity, vehicleType, source, customVehicle } = req.body;
+        const { crop, quantity, vehicleType, source, customVehicle, isRideShare = false } = req.body;
         const customVehicleRate = customVehicle?.ratePerKm || null;
 
         console.log('\nStarting optimization request...');
-        console.log(`Crop: ${crop}, Quantity: ${quantity} quintals, Vehicle: ${vehicleType}`);
+        console.log(`Crop: ${crop}, Quantity: ${quantity} quintals, Vehicle: ${vehicleType}, RideShare: ${isRideShare}`);
         console.log(`Source: ${source.lat}, ${source.lng}`);
+
+        // STEP 0: Fetch current fuel rates
+        console.log('\nSTEP 0: Fetching fuel rates...');
+        let fuelRates = { diesel: 90.5 };
+        try {
+            const livePrice = await fuelService.getLatestFuelPrice();
+            fuelRates = { diesel: livePrice };
+            console.log(`Current Diesel Price: ₹${fuelRates.diesel}/L`);
+        } catch (fuelError) {
+            console.warn('Failed to fetch fuel rates, using fallback:', fuelError.message);
+        }
 
         // STEP 1: Fetch mandi prices from Agmarknet
         console.log('\nSTEP 1: Fetching mandi prices...');
@@ -70,7 +83,14 @@ async function optimizeTrip(req, res) {
             nearbyMandis.push(...closestMandis);
         }
 
-        console.log(`${nearbyMandis.length} mandis within ${maxDistance} km`);
+        // STEP 2.5: Find pooling opportunities
+        console.log('\nSTEP 2.5: Searching for pooling partners...');
+        const poolOpportunities = poolingService.getPoolOpportunities(source, crop);
+        const topPartner = poolOpportunities.length > 0 ? poolOpportunities[0] : null;
+
+        if (isRideShare && topPartner) {
+            console.log(`Matched with pooling partner: ${topPartner.name} (${topPartner.quantity} quintals)`);
+        }
 
         // STEP 4: Calculate profit for each mandi
         console.log('\nSTEP 3: Calculating profits...');
@@ -78,7 +98,12 @@ async function optimizeTrip(req, res) {
             nearbyMandis,
             quantity,
             vehicleType,
-            customVehicleRate
+            {
+                customVehicleRate,
+                isRideShare,
+                poolPartner: isRideShare ? topPartner : null,
+                fuelPrice: fuelRates.diesel
+            }
         );
         console.log(`Calculated profits for ${profitResults.length} mandis`);
         if (customVehicleRate) {
@@ -99,11 +124,18 @@ async function optimizeTrip(req, res) {
             success: true,
             message: 'Optimization completed successfully',
             data: {
-                query: {
+                metadata: {
                     crop,
                     quantity,
                     vehicleType,
+                    isRideShare,
+                    maxDistanceKm: maxDistance,
                     sourceLocation: source,
+                    totalMandisAnalyzed: profitResults.length,
+                    vehicleRate: customVehicleRate || profitService.getVehicleRate(vehicleType, fuelRates.diesel),
+                    fuelPrice: fuelRates.diesel,
+                    customVehicle: customVehicle || null,
+                    timestamp: new Date().toISOString(),
                 },
                 optimization: {
                     bestMandi: decision.bestMandi,
@@ -112,6 +144,9 @@ async function optimizeTrip(req, res) {
                     recommendation: decision.recommendation,
                     worthExtraDistance: decision.worthExtraDistance,
                     perishability: decision.perishability,
+                    // Advanced Ride-Sharing: Real-time pool opportunities
+                    poolOpportunities: poolOpportunities,
+                    activePoolPartner: isRideShare ? topPartner : null
                 },
                 results: decision.allOptions.map(result => ({
                     mandi: result.mandiName,
@@ -126,14 +161,8 @@ async function optimizeTrip(req, res) {
                     profitPercentage: result.profitPercentage,
                     volatilityAlert: result.volatilityAlert,
                     historicalTrend: result.historicalTrend,
-                })),
-                metadata: {
-                    totalMandisAnalyzed: profitResults.length,
-                    maxDistanceKm: maxDistance,
-                    vehicleRate: customVehicleRate || profitService.getVehicleRate(vehicleType),
-                    customVehicle: customVehicle || null,
-                    timestamp: new Date().toISOString(),
-                },
+                    breakdown: result.breakdown
+                }))
             },
         };
 
@@ -181,14 +210,21 @@ function getAvailableCrops(req, res) {
  * Get available vehicle types
  * GET /api/vehicles
  */
-function getAvailableVehicles(req, res) {
+async function getAvailableVehicles(req, res) {
     try {
-        const vehicles = profitService.getAvailableVehicles();
+        let fuelPrice = 90.5;
+        try {
+            const livePrice = await fuelService.getLatestFuelPrice();
+            fuelPrice = livePrice;
+        } catch (e) { }
+
+        const vehicles = profitService.getAvailableVehicles(fuelPrice);
 
         res.status(200).json({
             success: true,
             data: {
                 vehicles,
+                fuelPrice
             },
         });
     } catch (error) {
@@ -206,7 +242,7 @@ function getAvailableVehicles(req, res) {
 function healthCheck(req, res) {
     res.status(200).json({
         success: true,
-        message: 'Krishi-Route API is running',
+        message: 'Krishi Route API is running',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
         usingMockData: process.env.USE_MOCK_DATA === 'true',

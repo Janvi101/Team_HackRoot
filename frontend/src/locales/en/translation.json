@@ -1,5 +1,5 @@
 {
-    "appTitle": "Krishi-Route",
+    "appTitle": "Krishi Route",
     "appSubtitle": "Empowering farmers with data-driven logistics decisions",
     "loading": "Loading...",
     "error": "Error:",
@@ -8,7 +8,10 @@
     "features": "Features",
     "about": "About",
     "techStack": "React • Node.js • MongoDB • Leaflet",
-    "rightsReserved": "© 2024 Krishi-Route. All rights reserved.",
+    "rightsReserved": "© 2024 Krishi Route. All rights reserved.",
+    "fuel": {
+        "liveDiesel": "Live Diesel Price"
+    },
     "hero": {
         "title": "Maximize Your Profits with Smart Logistics",
         "subtitle": "Find the best mandi for your produce, optimized for price and transport costs.",
@@ -16,7 +19,7 @@
     },
     "form": {
         "cropType": "Crop Type",
-        "quantityQuintals": "Quantity (Quintals)",
+        "quantityQuintals": "Quantity",
         "vehicleType": "Vehicle Type",
         "customVehicle": "Custom Vehicle",
         "addCustomVehicle": "Add Custom Vehicle",
@@ -55,7 +58,7 @@
     },
     "results": {
         "title": "Optimization Results",
-        "subtitle": "Showing 5 nearest mandis • Analyzed {{total}} mandis within {{distance}} km",
+        "subtitle": "Analyzed {{total}} mandis within {{distance}} km",
         "perishability": {
             "warning": "Crop Perishability Warning",
             "spoilage": "Expected Spoilage",
@@ -79,8 +82,8 @@
             "notWorthExtraDistance": "Extra distance may not justify the profit gain"
         },
         "nearestList": {
-            "title": "5 Nearest Mandis",
-            "sortedBy": "Sorted by distance",
+            "title": "Mandi Comparison Analysis",
+            "sortedBy": "Detailed breakdown for {{count}} market options",
             "bestProfit": "Best Profit",
             "nearest": "Nearest",
             "closest": "Closest",
@@ -135,8 +138,29 @@
         "legend": {
             "yourLocation": "Your Location",
             "bestMandi": "Best Mandi (Most Profitable)",
+            "poolPartners": "Pool Partners",
             "otherMandis": "Other Mandis"
         }
     },
-    "aboutText": "Built with modern tech stack for Indian agricultural sector"
+    "aboutText": "Built with modern tech stack for Indian agricultural sector",
+    "units": {
+        "kg": "kg",
+        "quintal": "Quintal",
+        "ton": "Ton"
+    },
+    "rideShare": {
+        "label": "Ride Share / Pool",
+        "description": "Pool with other farmers to save up to 40% on truck costs",
+        "active": "Ride Share Active",
+        "savings": "Ride Share Savings: ₹{{amount}}",
+        "opportunity": "Ride-Share Opportunity Found!",
+        "withPool": "With Pooling",
+        "solo": "Solo",
+        "impact": "Pooling reduces transport cost by 40% and increases net margin by {{percentage}}%",
+        "nearbyFarmer": "{{name}} is also going to {{mandi}} from a nearby location ({{distance}}km away).",
+        "switchNow": "Switch to Ride-Share to save ₹{{amount}}",
+        "opportunitiesTitle": "Nearby Pool Opportunities",
+        "opportunitiesSubtitle": "Share space, save fuel costs!",
+        "joinPool": "Join Pool"
+    }
 }

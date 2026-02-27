@@ -1,7 +1,7 @@
 {
     "name": "krishiroute-backend",
     "version": "1.0.0",
-    "description": "Backend API for Krishi-Route - Profit & Logistics Optimizer for Farmers",
+    "description": "Backend API for Krishi Route - Profit & Logistics Optimizer for Farmers",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",

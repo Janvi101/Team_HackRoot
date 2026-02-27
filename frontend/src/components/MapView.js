@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const MapView = ({ sourceLocation, results, bestMandiName }) => {
+const MapView = ({ sourceLocation, results, bestMandiName, poolOpportunities = [] }) => {
     const { t, i18n } = useTranslation();
 
     // Determine Map Tile URL based on language
@@ -23,15 +23,14 @@ const MapView = ({ sourceLocation, results, bestMandiName }) => {
     // Hindi: Use Google Maps with hl=hi (best for Hindi).
     const getTileUrl = () => {
         const lang = i18n.language || 'en';
-        if (lang === 'hi') {
-            return {
-                url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=hi',
-                attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-            };
-        }
+        // Google Maps tiles support localization via the 'hl' parameter
+        // This is excellent for Indian regional languages
+        const supportedLangs = ['en', 'hi', 'mr', 'pa', 'te', 'ta', 'kn', 'gu'];
+        const mapLang = supportedLangs.includes(lang) ? lang : 'en';
+
         return {
-            url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url: `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=${mapLang}`,
+            attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
         };
     };
 
@@ -85,6 +84,28 @@ const MapView = ({ sourceLocation, results, bestMandiName }) => {
     });
 
     // Other mandis - BLUE market/shop marker
+    // Pool partners - GREEN group/sharing marker
+    const poolPartnerIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 3px solid white;
+      box-shadow: 0 3px 8px rgba(46, 204, 113, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <span style="transform: rotate(45deg); font-size: 16px;">👥</span>
+    </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+
     const mandiIcon = L.divIcon({
         className: 'custom-div-icon',
         html: `<div style="
@@ -144,6 +165,25 @@ const MapView = ({ sourceLocation, results, bestMandiName }) => {
                         </Popup>
                     </Marker>
 
+                    {/* Pool Partner Markers */}
+                    {poolOpportunities.map((partner) => (
+                        <Marker
+                            key={partner.id}
+                            position={[partner.location.lat, partner.location.lng]}
+                            icon={poolPartnerIcon}
+                        >
+                            <Popup>
+                                <div className="popup-content">
+                                    <strong>🤝 {partner.farmerName}</strong>
+                                    <br />
+                                    <span className="popup-label">{partner.crop}:</span> {partner.quantity} Q
+                                    <br />
+                                    <span className="popup-label">{t('results.winner.distance')}:</span> {partner.distanceFromUser} km
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
+
                     {/* Mandi markers and routes */}
                     {results.map((result, index) => {
                         const mandiLoc = getMandiLocation(result, index);
@@ -191,6 +231,10 @@ const MapView = ({ sourceLocation, results, bestMandiName }) => {
                     <div className="legend-item">
                         <div className="legend-marker green"></div>
                         <span>🏠 {t('map.legend.yourLocation')}</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="legend-marker pool-green" style={{ background: '#2ecc71' }}></div>
+                        <span>👥 {t('map.legend.poolPartners')}</span>
                     </div>
                     <div className="legend-item">
                         <div className="legend-marker gold"></div>

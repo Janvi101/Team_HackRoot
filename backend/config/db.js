@@ -6,7 +6,11 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGODB_URL, {
+        const dbUrl = process.env.MONGODB_URI || process.env.MONGODB_URL;
+        if (!dbUrl) {
+            throw new Error('MongoDB connection string not found (MONGODB_URI or MONGODB_URL)');
+        }
+        const conn = await mongoose.connect(dbUrl, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
