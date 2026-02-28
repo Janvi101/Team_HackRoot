@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> 095d92c68c6cd98d4f339d6eb005af01730739aa
 # 🌾 Krishi Route - Profit & Logistics Optimizer (Deployment and Live Link)
 
 **"Google Maps for Farmers, optimized for PROFIT"**
