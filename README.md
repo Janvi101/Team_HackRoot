@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 095d92c68c6cd98d4f339d6eb005af01730739aa
 # 🌾 Krishi Route - Profit & Logistics Optimizer (Deployment and Live Link)
 
 **"Google Maps for Farmers, optimized for PROFIT"**
@@ -6,7 +10,7 @@ Krishi Route is a professional, full-stack decision-support platform built to em
 
 ---
 
-## �️ Technical Architecture
+##  ️ Technical Architecture
 
 Krishi Route uses a decoupled 3-tier architecture designed for scalability and real-time processing:
 
@@ -40,7 +44,7 @@ graph TD
 - **🤝 Advanced Ride-Sharing (Pooling)**: Finds nearby farmers heading to the same destination. 
   - **Weighted Cost Splitting**: Splits fuel/transport costs proportionally by crop weight, maximizing savings.
   - **Matchmaking Service**: Automatically pairs users with active "pool opportunities."
-- **� Perishability Algorithm**: Proprietary logic that calculates **Spoilage Risk** for high-perishability crops (onions, tomatoes).
+- **  Perishability Algorithm**: Proprietary logic that calculates **Spoilage Risk** for high-perishability crops (onions, tomatoes).
   - Adjusts net profit based on travel time and crop shelf life.
   - Provides "Local Alternative" warnings if the risk is too high.
 - **📈 Market Intelligence (Advanced)**: 
@@ -51,7 +55,7 @@ graph TD
 
 ---
 
-## � Setup & Installation (Detailed)
+##   Setup & Installation (Detailed)
 
 There are two ways to run this project: **Separate Setup** (Recommended for debugging) or **Unified Setup** (Fastest).
 
@@ -155,6 +159,7 @@ This project is optimized for one-click deployment to Vercel.
 
 ---
 
+<<<<<<< HEAD
 - **Project Demo Video**: [Watch Video Demo](https://youtube.com/...) *(Placeholder)*
 
 ---
@@ -162,6 +167,15 @@ This project is optimized for one-click deployment to Vercel.
 ## ☁️ Deployment
 
 - **Deployment Link**: [https://krishi-route.vercel.app/](https://krishi-route.vercel.app/)
+=======
+- **Project Demo Video**: https://drive.google.com/file/d/1SBiKJHwO4grpoJi7aVIosyl5A5VBvLKe/view?usp=drivesdk
+
+---
+
+## ☁️ Deployment & Live Links
+
+- **Deployment Link(Live Links)**: https://krishirout.vercel.app/
+>>>>>>> 095d92c68c6cd98d4f339d6eb005af01730739aa
 - **Frontend Hosting**: Deployed on **Vercel** via the root `vercel.json`.
 - **Backend Hosting**: Hosted on **Render** (Node.js/Express).
 - **API URL**: In production, the frontend is configured to use the Render-hosted `/api` URL.
@@ -170,3 +184,4 @@ This project is optimized for one-click deployment to Vercel.
 
 ## 📄 License
 MIT License - Developed for the advancement of Indian Agricultural Logistics.
+
