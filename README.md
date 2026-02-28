@@ -156,17 +156,12 @@ This project is optimized for one-click deployment to Vercel.
 ---
 
 
-- **Project Demo Video**: [Watch Video Demo](https://youtube.com/...) *(Placeholder)*
+## ☁️ Project Demo Video
+
+ **Project Demo Video**: https://drive.google.com/file/d/1SBiKJHwO4grpoJi7aVIosyl5A5VBvLKe/view?usp=drivesdk
 
 ---
 
-## ☁️ Deployment
-
-- **Deployment Link**: [https://krishi-route.vercel.app/](https://krishi-route.vercel.app/)
-
-- **Project Demo Video**: https://drive.google.com/file/d/1SBiKJHwO4grpoJi7aVIosyl5A5VBvLKe/view?usp=drivesdk
-
----
 
 ## ☁️ Deployment & Live Links
 
@@ -174,7 +169,6 @@ This project is optimized for one-click deployment to Vercel.
 
 - **Frontend Hosting**: Deployed on **Vercel** via the root `vercel.json`.
 - **Backend Hosting**: Hosted on **Render** (Node.js/Express).
-- **API URL**: In production, the frontend is configured to use the Render-hosted `/api` URL.
 
 ---
 
