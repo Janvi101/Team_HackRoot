@@ -1,4 +1,4 @@
-# 🌾 Krishi Route - Profit & Logistics Optimizer (Deployment and Live Link)
+# 🌾 Krishi Route - Profit & Logistics Optimizer 
 
 **"Google Maps for Farmers, optimized for PROFIT"**
 
@@ -155,7 +155,7 @@ This project is optimized for one-click deployment to Vercel.
 
 ---
 
-<<<<<<< HEAD
+
 - **Project Demo Video**: [Watch Video Demo](https://youtube.com/...) *(Placeholder)*
 
 ---
@@ -163,7 +163,7 @@ This project is optimized for one-click deployment to Vercel.
 ## ☁️ Deployment
 
 - **Deployment Link**: [https://krishi-route.vercel.app/](https://krishi-route.vercel.app/)
-=======
+
 - **Project Demo Video**: https://drive.google.com/file/d/1SBiKJHwO4grpoJi7aVIosyl5A5VBvLKe/view?usp=drivesdk
 
 ---
@@ -171,7 +171,7 @@ This project is optimized for one-click deployment to Vercel.
 ## ☁️ Deployment & Live Links
 
 - **Deployment Link(Live Links)**: https://krishirout.vercel.app/
->>>>>>> 095d92c68c6cd98d4f339d6eb005af01730739aa
+
 - **Frontend Hosting**: Deployed on **Vercel** via the root `vercel.json`.
 - **Backend Hosting**: Hosted on **Render** (Node.js/Express).
 - **API URL**: In production, the frontend is configured to use the Render-hosted `/api` URL.
